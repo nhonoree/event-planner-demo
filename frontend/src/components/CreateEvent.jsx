@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function CreateEvent() {
   const [form, setForm] = useState({
@@ -9,6 +10,7 @@ function CreateEvent() {
   })
 
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -18,7 +20,12 @@ function CreateEvent() {
     e.preventDefault()
 
     const token = localStorage.getItem('token')
-    if (!token) return setMessage('❌ You must be logged in to create an event.')
+    if (!token) {
+      setMessage('❌ You must be logged in to create an event.')
+      // Redirect to login page after short delay
+      setTimeout(() => navigate('/login'), 2000)
+      return
+    }
 
     try {
       const res = await fetch('http://localhost:5000/api/events', {
@@ -34,7 +41,9 @@ function CreateEvent() {
 
       if (res.ok) {
         setMessage('✅ Event created successfully!')
-        setForm({ title: '', description: '', date: '', location: '' }) // reset
+        setForm({ title: '', description: '', date: '', location: '' }) // reset form
+        // Redirect to events list after short delay
+        setTimeout(() => navigate('/events'), 2000)
       } else {
         setMessage(`❌ ${data.message || 'Something went wrong'}`)
       }

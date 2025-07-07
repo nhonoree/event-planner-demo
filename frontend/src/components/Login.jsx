@@ -16,9 +16,17 @@ function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
+
       const data = await res.json()
-      if (res.ok) setMessage(`✅ Welcome, ${data.user.name}`)
-      else setMessage(`❌ ${data.message || 'Login failed'}`)
+
+      if (res.ok) {
+        // ✅ Save the token to localStorage
+        localStorage.setItem('token', data.token)
+
+        setMessage(`✅ Welcome, ${data.user?.name || data.user?.username || 'User'}`)
+      } else {
+        setMessage(`❌ ${data.message || 'Login failed'}`)
+      }
     } catch (err) {
       setMessage('❌ Network error')
     }

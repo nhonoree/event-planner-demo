@@ -3,6 +3,11 @@ const router = express.Router()
 const Event = require('../models/Event')
 const jwt = require('jsonwebtoken')
 
+// Simple test route to check if routing works
+router.get('/test', (req, res) => {
+  res.json({ message: 'Events route works!' });
+})
+
 // Middleware to verify token
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1]
@@ -16,6 +21,16 @@ function authMiddleware(req, res, next) {
     res.status(403).json({ message: 'Invalid token' })
   }
 }
+
+// GET /api/events - get all events
+router.get('/', async (req, res) => {
+  try {
+    const events = await Event.find().populate('creator', 'username')
+    res.json(events)
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching events' })
+  }
+})
 
 // POST /api/events - create event
 router.post('/', authMiddleware, async (req, res) => {

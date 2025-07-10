@@ -12,8 +12,14 @@ console.log('Environment loaded.');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// Middleware with CORS setup for both local and deployed frontend
+app.use(cors({
+  origin: [
+    'http://localhost:3000',                       // Local dev
+    'https://event-planner-demo.vercel.app'            // 🔁 Replace with your actual frontend URL
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 console.log('Middleware setup complete.');

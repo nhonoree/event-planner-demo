@@ -1,31 +1,24 @@
 import React, { useState } from 'react'
+import { Form, Button, Container, Alert, Card, Spinner } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function CreateEvent() {
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    date: '',
-    location: ''
-  })
-
-  const [message, setMessage] = useState('')
+  const [form, setForm] = useState({ title: '', date: '', location: '', description: '' })
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const token = localStorage.getItem('token')
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
-
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setMessage('❌ You must be logged in to create an event.')
-      // Redirect to login page after short delay
-      setTimeout(() => navigate('/login'), 2000)
-      return
-    }
+    setError(null)
+    setLoading(true)
 
     try {
       const res = await fetch('http://localhost:5000/api/events', {
@@ -37,55 +30,99 @@ function CreateEvent() {
         body: JSON.stringify(form)
       })
 
-      const data = await res.json()
+      if (!res.ok) throw new Error('Failed to create event')
 
-      if (res.ok) {
-        setMessage('✅ Event created successfully!')
-        setForm({ title: '', description: '', date: '', location: '' }) // reset form
-        // Redirect to events list after short delay
-        setTimeout(() => navigate('/events'), 2000)
-      } else {
-        setMessage(`❌ ${data.message || 'Something went wrong'}`)
-      }
+      setForm({ title: '', date: '', location: '', description: '' })
+      toast.success('Event created successfully!')
+      setLoading(false)
+
+      setTimeout(() => navigate('/dashboard'), 1500)
     } catch (err) {
-      setMessage('❌ Network error')
+      setError(err.message)
+      toast.error(err.message)
+      setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Create Event</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="title"
-          placeholder="Event Title"
-          value={form.title}
-          onChange={handleChange}
-          required
-        /><br />
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-        /><br />
-        <input
-          name="date"
-          type="datetime-local"
-          value={form.date}
-          onChange={handleChange}
-          required
-        /><br />
-        <input
-          name="location"
-          placeholder="Location"
-          value={form.location}
-          onChange={handleChange}
-        /><br />
-        <button type="submit">Create Event</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <Container className="mt-4">
+      <ToastContainer position="top-center" />
+      <Card className="shadow p-4">
+        <h2 className="mb-4 text-center">🎉 Create a New Event</h2>
+
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3" controlId="formTitle">
+            <Form.Label>Event Title</Form.Label>
+            <Form.Control
+              type="text"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+              placeholder="Enter event title"
+              disabled={loading}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formDate">
+            <Form.Label>Date & Time</Form.Label>
+            <Form.Control
+              type="datetime-local"
+              name="date"
+              value={form.date}
+              onChange={handleChange}
+              required
+              disabled={loading}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formLocation">
+            <Form.Label>Location</Form.Label>
+            <Form.Control
+              type="text"
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              placeholder="Enter location"
+              disabled={loading}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="formDescription">
+            <Form.Label>Description</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Write a short description"
+              disabled={loading}
+            />
+          </Form.Group>
+
+          <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Creating...
+              </>
+            ) : (
+              'Create Event'
+            )}
+          </Button>
+        </Form>
+      </Card>
+    </Container>
   )
 }
 

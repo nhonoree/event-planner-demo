@@ -7,10 +7,12 @@ import CreateEvent from './components/CreateEvent'
 import EventList from './components/EventList'
 import Logout from './components/Logout'
 import ProtectedRoute from './components/ProtectedRoute'
-import { isTokenExpired } from './utils/auth'  // make sure path is correct
+import { isTokenExpired } from './utils/auth' 
+import EditEvent from './components/EditEvent'
+import MyEvents from './components/MyEvents'
+import Footer from './components/Footer'  // <-- import Footer here
 
 function AppWrapper() {
-  // Because useNavigate hook can only be used inside components
   return (
     <BrowserRouter>
       <App />
@@ -37,14 +39,14 @@ function App() {
         <Link to="/dashboard">Dashboard</Link> |{' '}
         <Link to="/create">Create Event</Link> |{' '}
         <Link to="/events">Events</Link> |{' '}
-        <Link to="/logout">Logout</Link>
+        <Link to="/logout">Logout</Link> |{' '}
+        <Link to="/my-events">My Events</Link>
       </nav>
 
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protect these routes */}
         <Route
           path="/dashboard"
           element={
@@ -64,9 +66,30 @@ function App() {
 
         <Route path="/events" element={<EventList />} />
         <Route path="/logout" element={<Logout />} />
+
+        <Route
+          path="/edit/:id"
+          element={
+            <ProtectedRoute>
+              <EditEvent />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-events"
+          element={
+            <ProtectedRoute>
+              <MyEvents />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+
+      <Footer /> {/* Add Footer here */}
     </>
   )
 }
 
 export default AppWrapper
+

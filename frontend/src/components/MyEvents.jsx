@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import {
+  Container,
+  Card,
+  Button,
+  Spinner,
+  Row,
+  Col,
+  Alert
+} from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function MyEvents() {
   const [events, setEvents] = useState([]);
@@ -14,7 +25,7 @@ function MyEvents() {
     }
 
     fetch('http://localhost:5000/api/events/my', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch your events');
@@ -30,23 +41,83 @@ function MyEvents() {
       });
   }, [token]);
 
-  if (loading) return <p>Loading your events...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (events.length === 0) return <p>You have no events yet.</p>;
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        setEvents(events.filter(event => event._id !== id));
+        toast.success('✅ Event deleted successfully');
+      } else {
+        const data = await res.json();
+        toast.error(data.message || '❌ Delete failed');
+      }
+    } catch {
+      toast.error('❌ Network error');
+    }
+  };
+
+  if (loading) {
+    return (
+      <Container className="text-center mt-5">
+        <Spinner animation="border" />
+        <p>Loading your events...</p>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="mt-5">
+        <Alert variant="danger">Error: {error}</Alert>
+      </Container>
+    );
+  }
 
   return (
-    <div>
-      <h2>Your Events</h2>
-      <ul>
+    <Container className="mt-4">
+      <h2 className="mb-4">📌 My Events</h2>
+      <Row>
+        {events.length === 0 && <p>You haven’t created any events yet.</p>}
         {events.map(event => (
-          <li key={event._id}>
-            <strong>{event.title}</strong> — {new Date(event.date).toLocaleString()} <br />
-            <button onClick={() => window.location.href = `/edit/${event._id}`}>✏️ Edit</button>{' '}
-            <button onClick={() => alert('Add delete logic here')}>🗑️ Delete</button>
-          </li>
+          <Col md={4} sm={6} xs={12} key={event._id} className="mb-4">
+            <Card>
+              <Card.Body>
+                <Card.Title>{event.title}</Card.Title>
+                <Card.Text>
+                  <strong>When:</strong> {new Date(event.date).toLocaleString()}<br />
+                  <strong>Where:</strong> {event.location || 'No location'}<br />
+                  <strong>Description:</strong> {event.description || 'No description'}
+                </Card.Text>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="me-2"
+                  onClick={() => window.location.href = `/edit/${event._id}`}
+                >
+                  ✏️ Edit
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDelete(event._id)}
+                >
+                  🗑️ Delete
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
         ))}
-      </ul>
-    </div>
+      </Row>
+      <ToastContainer />
+    </Container>
   );
 }
 

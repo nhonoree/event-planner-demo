@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 import {
   Card,
   Button,
@@ -9,13 +6,22 @@ import {
   Row,
   Col,
   Spinner,
-  Alert
+  Alert,
+  Form
 } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function EventList() {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    title: '',
+    location: '',
+    date: ''
+  });
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -26,6 +32,7 @@ function EventList() {
       })
       .then(data => {
         setEvents(data);
+        setFilteredEvents(data);
         setLoading(false);
       })
       .catch(err => {
@@ -59,14 +66,31 @@ function EventList() {
 
       if (res.ok) {
         setEvents(events.filter(event => event._id !== id));
-        toast.success('✅ Event deleted successfully');
+        setFilteredEvents(filteredEvents.filter(event => event._id !== id));
+        toast.success('Event deleted successfully');
       } else {
         const data = await res.json();
-        toast.error(`❌ ${data.message || 'Delete failed'}`);
+        toast.error(data.message || 'Delete failed');
       }
     } catch (err) {
-      toast.error('❌ Network error while deleting event');
+      toast.error('Network error while deleting event');
     }
+  };
+
+  // Filter handler
+  const handleFilterChange = e => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+
+    const filtered = events.filter(event => {
+      return (
+        event.title.toLowerCase().includes(newFilters.title.toLowerCase()) &&
+        (newFilters.location === '' || (event.location || '').toLowerCase().includes(newFilters.location.toLowerCase())) &&
+        (newFilters.date === '' || new Date(event.date).toDateString() === new Date(newFilters.date).toDateString())
+      );
+    });
+    setFilteredEvents(filtered);
   };
 
   if (loading) {
@@ -88,10 +112,46 @@ function EventList() {
 
   return (
     <Container className="mt-4">
+      <ToastContainer />
       <h2 className="mb-4">All Events</h2>
+
+      {/* Filters */}
+      <Form className="mb-4">
+        <Row>
+          <Col md={4} sm={6} xs={12} className="mb-2">
+            <Form.Control
+              type="text"
+              placeholder="Search by Title"
+              name="title"
+              value={filters.title}
+              onChange={handleFilterChange}
+            />
+          </Col>
+          <Col md={4} sm={6} xs={12} className="mb-2">
+            <Form.Control
+              type="text"
+              placeholder="Filter by Location"
+              name="location"
+              value={filters.location}
+              onChange={handleFilterChange}
+            />
+          </Col>
+          <Col md={4} sm={6} xs={12} className="mb-2">
+            <Form.Control
+              type="date"
+              placeholder="Filter by Date"
+              name="date"
+              value={filters.date}
+              onChange={handleFilterChange}
+            />
+          </Col>
+        </Row>
+      </Form>
+
+      {/* Event Cards */}
       <Row>
-        {events.length === 0 && <p>No events found.</p>}
-        {events.map(event => (
+        {filteredEvents.length === 0 && <p>No events found.</p>}
+        {filteredEvents.map(event => (
           <Col md={4} sm={6} xs={12} key={event._id} className="mb-4">
             <Card>
               <Card.Body>
@@ -129,9 +189,6 @@ function EventList() {
           </Col>
         ))}
       </Row>
-
-      {/* ✅ Toast container to show notifications */}
-      <ToastContainer position="top-center" />
     </Container>
   );
 }

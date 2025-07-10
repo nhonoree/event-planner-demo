@@ -10,7 +10,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { isTokenExpired } from './utils/auth' 
 import EditEvent from './components/EditEvent'
 import MyEvents from './components/MyEvents'
-import Footer from './components/Footer'  // <-- import Footer here
+import Footer from './components/Footer' 
+import NotFound from './components/NotFound';
+import Home from './components/Home';
 
 function AppWrapper() {
   return (
@@ -32,8 +34,8 @@ function App() {
   }, [navigate])
 
   return (
-    <>
-      <nav style={{ marginBottom: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <nav style={{ marginBottom: '1rem', padding: '1rem', background: '#eee' }}>
         <Link to="/register">Register</Link> |{' '}
         <Link to="/login">Login</Link> |{' '}
         <Link to="/dashboard">Dashboard</Link> |{' '}
@@ -43,53 +45,59 @@ function App() {
         <Link to="/my-events">My Events</Link>
       </nav>
 
-      <Routes>
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+      <main style={{ flexGrow: 1, padding: '0 1rem' }}>
+        <Routes>
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute>
-              <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreateEvent />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/events" element={<EventList />} />
-        <Route path="/logout" element={<Logout />} />
+          <Route path="/events" element={<EventList />} />
+          <Route path="/logout" element={<Logout />} />
 
-        <Route
-          path="/edit/:id"
-          element={
-            <ProtectedRoute>
-              <EditEvent />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditEvent />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/my-events"
-          element={
-            <ProtectedRoute>
-              <MyEvents />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          <Route
+            path="/my-events"
+            element={
+              <ProtectedRoute>
+                <MyEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/" element={<Home />} />
 
-      <Footer /> {/* Add Footer here */}
-    </>
+          
+
+        </Routes>
+      </main>
+
+      <Footer />
+    </div>
   )
 }
 
 export default AppWrapper
-

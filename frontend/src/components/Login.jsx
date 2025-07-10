@@ -1,48 +1,98 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import {
+  Container,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Row,
+  Col
+} from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [message, setMessage] = useState('')
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [message, setMessage] = useState('');
+  const [variant, setVariant] = useState('danger');
+  const navigate = useNavigate();
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async e => {
-    e.preventDefault()
+    e.preventDefault();
+    setMessage('');
+
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok) {
-        // ✅ Save the token to localStorage
-        localStorage.setItem('token', data.token)
+        localStorage.setItem('token', data.token);
+        setVariant('success');
+        setMessage(`✅ Welcome, ${data.user?.name || data.user?.username || 'User'}`);
 
-        setMessage(`✅ Welcome, ${data.user?.name || data.user?.username || 'User'}`)
+        // Redirect after short delay
+        setTimeout(() => navigate('/dashboard'), 1500);
       } else {
-        setMessage(`❌ ${data.message || 'Login failed'}`)
+        setVariant('danger');
+        setMessage(`❌ ${data.message || 'Login failed'}`);
       }
-    } catch (err) {
-      setMessage('❌ Network error')
+    } catch {
+      setVariant('danger');
+      setMessage('❌ Network error');
     }
-  }
+  };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input name="email" type="email" placeholder="Email" onChange={handleChange} required /><br />
-        <input name="password" type="password" placeholder="Password" onChange={handleChange} required /><br />
-        <button type="submit">Login</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
-  )
+    <Container className="mt-5">
+      <Row className="justify-content-center">
+        <Col md={6} lg={5}>
+          <Card className="shadow p-4">
+            <h3 className="text-center mb-4">🔐 Login</h3>
+
+            {message && <Alert variant={variant}>{message}</Alert>}
+
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3" controlId="formEmail">
+                <Form.Label>Email address</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter email"
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formPassword">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Enter password"
+                  required
+                />
+              </Form.Group>
+
+              <Button variant="primary" type="submit" className="w-100">
+                Login
+              </Button>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
 }
 
-export default Login
+export default Login;

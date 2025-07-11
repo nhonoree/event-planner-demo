@@ -40,7 +40,8 @@ const PORT = process.env.PORT || 5000;
 // Enhanced CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://event-planner-demo-5mfd.vercel.app'
+'https://event-planner-demo.vercel.app'
+  
 ];
 
 app.use(cors({
